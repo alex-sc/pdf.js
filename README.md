@@ -6,6 +6,17 @@ PDF.js is community-driven and supported by Mozilla. Our goal is to
 create a general-purpose, web standards-based platform for parsing and
 rendering PDFs.
 
+## Build
+```
+git clone https://github.com/alex-sc/pdf.js.git
+cd pdf.js/
+git checkout v4.0.379-no-modules
+npm install
+npm install -g gulp-cli (if needed)
+gulp generic
+Open ./build/generic/web/viewer.html in browser
+```
+
 ## Contributing
 
 PDF.js is an open source project and always looking for more contributors. To
