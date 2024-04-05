@@ -898,7 +898,7 @@ gulp.task("locale", function () {
 
   const subfolders = fs.readdirSync(L10N_DIR);
   subfolders.sort();
-  let viewerOutput = "";
+  let viewerOutput = Object.create(null);
   const locales = [];
   for (const locale of subfolders) {
     const dirPath = L10N_DIR + locale;
@@ -914,23 +914,19 @@ gulp.task("locale", function () {
 
     locales.push(locale);
 
-    if (checkFile(dirPath + "/viewer.properties")) {
-      viewerOutput +=
-        "[" +
-        locale +
-        "]\n" +
-        "@import url(" +
-        locale +
-        "/viewer.properties)\n\n";
+    if (checkFile(dirPath + "/viewer.ftl")) {
+      viewerOutput[locale] = `${locale}/viewer.ftl`;
     }
   }
 
+  const glob = locales.length === 1 ? locales[0] : `{${locales.join(",")}}`;
+
   return merge([
-    createStringSource("locale.properties", viewerOutput).pipe(
+    createStringSource("locale.json", JSON.stringify(viewerOutput)).pipe(
       gulp.dest(VIEWER_LOCALE_OUTPUT)
     ),
     gulp
-      .src(L10N_DIR + "/{" + locales.join(",") + "}/viewer.properties", {
+      .src(`${L10N_DIR}/${glob}/viewer.ftl`, {
         base: L10N_DIR,
       })
       .pipe(gulp.dest(VIEWER_LOCALE_OUTPUT)),
@@ -1013,7 +1009,7 @@ function buildGeneric(defines, dir) {
     gulp.src("LICENSE").pipe(gulp.dest(dir)),
     gulp.src("viewer-setup.js").pipe(gulp.dest(dir + "web")),
     gulp
-      .src(["web/locale/*/viewer.properties", "web/locale/locale.properties"], {
+      .src(["web/locale/*/viewer.ftl", "web/locale/locale.json"], {
         base: "web/",
       })
       .pipe(gulp.dest(dir + "web")),
@@ -1435,9 +1431,7 @@ gulp.task(
           .pipe(replaceMozcentralCSS())
           .pipe(gulp.dest(MOZCENTRAL_CONTENT_DIR + "web")),
 
-        gulp
-          .src("l10n/en-US/*.properties")
-          .pipe(gulp.dest(MOZCENTRAL_L10N_DIR)),
+        gulp.src("l10n/en-US/*.ftl").pipe(gulp.dest(MOZCENTRAL_L10N_DIR)),
         gulp.src("LICENSE").pipe(gulp.dest(MOZCENTRAL_EXTENSION_DIR)),
         gulp
           .src(FIREFOX_CONTENT_DIR + "PdfJsDefaultPreferences.sys.mjs")
@@ -1499,10 +1493,9 @@ gulp.task(
           .pipe(gulp.dest(CHROME_BUILD_CONTENT_DIR + "web")),
 
         gulp
-          .src(
-            ["web/locale/*/viewer.properties", "web/locale/locale.properties"],
-            { base: "web/" }
-          )
+          .src(["web/locale/*/viewer.ftl", "web/locale/locale.json"], {
+            base: "web/",
+          })
           .pipe(gulp.dest(CHROME_BUILD_CONTENT_DIR + "web")),
         createCMapBundle().pipe(
           gulp.dest(CHROME_BUILD_CONTENT_DIR + "web/cmaps")
@@ -1658,10 +1651,7 @@ function buildLib(defines, dir) {
       ],
       { base: "src/" }
     ),
-    gulp.src(
-      ["external/webL10n/l10n.js", "web/*.js", "!web/{pdfjs,viewer}.js"],
-      { base: "." }
-    ),
+    gulp.src(["web/*.js", "!web/{pdfjs,viewer}.js"], { base: "." }),
     gulp.src("test/unit/*.js", { base: "." }),
   ]);
 
