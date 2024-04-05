@@ -238,7 +238,7 @@ function createWebpackConfig(
     "pdfjs-web": "web",
     "pdfjs-lib": "web/pdfjs",
     "fluent-bundle": "node_modules/@fluent/bundle/esm/index.js",
-    "fluent-dom": "node_modules/@fluent/dom/esm/index.js",
+    //"fluent-dom": "node_modules/@fluent/dom/esm/index.js",
   };
   const libraryAlias = {
     "display-fetch_stream": "src/display/stubs.js",
