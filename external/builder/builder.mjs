@@ -75,14 +75,14 @@ function preprocess(inFilename, outFilename, defines) {
     typeof outFilename === "function"
       ? outFilename
       : function (line) {
-        if (!line || AllWhitespaceRegexp.test(line)) {
-          const prevLine = out.at(-1);
-          if (!prevLine || AllWhitespaceRegexp.test(prevLine)) {
-            return; // Avoid adding consecutive blank lines.
+          if (!line || AllWhitespaceRegexp.test(line)) {
+            const prevLine = out.at(-1);
+            if (!prevLine || AllWhitespaceRegexp.test(prevLine)) {
+              return; // Avoid adding consecutive blank lines.
+            }
           }
-        }
-        out.push(line);
-      };
+          out.push(line);
+        };
   function evaluateCondition(code) {
     if (!code || !code.trim()) {
       throw new Error("No JavaScript expression given at " + loc());
@@ -92,13 +92,13 @@ function preprocess(inFilename, outFilename, defines) {
     } catch (e) {
       throw new Error(
         'Could not evaluate "' +
-        code +
-        '" at ' +
-        loc() +
-        "\n" +
-        e.name +
-        ": " +
-        e.message
+          code +
+          '" at ' +
+          loc() +
+          "\n" +
+          e.name +
+          ": " +
+          e.message
       );
     }
   }
