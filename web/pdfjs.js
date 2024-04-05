@@ -19,7 +19,7 @@ if (
   (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) &&
   !globalThis.pdfjsLib
 ) {
-  await globalThis.pdfjsLibPromise;
+  // await globalThis.pdfjsLibPromise;
 }
 
 const {
