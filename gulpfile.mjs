@@ -189,6 +189,9 @@ function createWebpackConfig(
     BUNDLE_VERSION: versionInfo.version,
     BUNDLE_BUILD: versionInfo.commit,
     TESTING: defines.TESTING ?? process.env.TESTING === "true",
+    BROWSER_PREFERENCES: defaultPreferencesDir
+      ? getBrowserPreferences(defaultPreferencesDir)
+      : {},
     DEFAULT_PREFERENCES: defaultPreferencesDir
       ? getDefaultPreferences(defaultPreferencesDir)
       : {},
@@ -853,6 +856,13 @@ async function parseDefaultPreferences(dir) {
     DEFAULT_PREFERENCES_DIR + dir + "default_preferences.json",
     JSON.stringify(prefs)
   );
+}
+
+function getBrowserPreferences(dir) {
+  const str = fs
+    .readFileSync(DEFAULT_PREFERENCES_DIR + dir + "browser_preferences.json")
+    .toString();
+  return JSON.parse(str);
 }
 
 function getDefaultPreferences(dir) {
