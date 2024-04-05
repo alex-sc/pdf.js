@@ -192,6 +192,7 @@ function createWebpackConfig(
     DEFAULT_PREFERENCES: defaultPreferencesDir
       ? getDefaultPreferences(defaultPreferencesDir)
       : {},
+    DEFAULT_FTL: defines.GENERIC ? getDefaultFtl() : "",
   };
   const licenseHeaderLibre = fs
     .readFileSync("./src/license_header_libre.js")
@@ -238,8 +239,9 @@ function createWebpackConfig(
     pdfjs: "src",
     "pdfjs-web": "web",
     "pdfjs-lib": "web/pdfjs",
-    "fluent-bundle": "node_modules/@fluent/bundle/esm/index.js",
-    //"fluent-dom": "node_modules/@fluent/dom/esm/index.js",
+    "fluent-bundle": "node_modules/@fluent/bundle/index.js",
+    "fluent-dom": "node_modules/@fluent/dom/index.js",
+    "cached-iterable": "node_modules/cached-iterable/compat.js",
   };
   const libraryAlias = {
     "display-fetch_stream": "src/display/stubs.js",
@@ -858,6 +860,21 @@ function getDefaultPreferences(dir) {
     .readFileSync(DEFAULT_PREFERENCES_DIR + dir + "default_preferences.json")
     .toString();
   return JSON.parse(str);
+}
+
+function getDefaultFtl() {
+  const content = fs.readFileSync("l10n/en-US/viewer.ftl").toString(),
+    stringBuf = [];
+
+  // Strip out comments and line-breaks.
+  const regExp = /^\s*#/;
+  for (const line of content.split("\n")) {
+    if (!line || regExp.test(line)) {
+      continue;
+    }
+    stringBuf.push(line);
+  }
+  return stringBuf.join("\n");
 }
 
 gulp.task("locale", function () {
