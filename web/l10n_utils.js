@@ -50,7 +50,7 @@ class ConstL10n extends L10n {
   }
 
   static get instance() {
-    return shadow(this, "instance", new ConstL10n("en-us"));
+    return shadow(this, "instance", NullL10n);
   }
 }
 
@@ -60,27 +60,27 @@ class ConstL10n extends L10n {
  */
 const NullL10n = {
   getLanguage() {
-    return ConstL10n.instance.getLanguage();
+    return "en";
   },
 
   getDirection() {
-    return ConstL10n.instance.getDirection();
+    return "ltr";
   },
 
   async get(ids, args = null, fallback) {
-    return ConstL10n.instance.get(ids, args, fallback);
+    return fallback;
   },
 
   async translate(element) {
-    return ConstL10n.instance.translate(element);
+    // do nothing
   },
 
   pause() {
-    return ConstL10n.instance.pause();
+    // do nothing
   },
 
   resume() {
-    return ConstL10n.instance.resume();
+    // do nothing
   },
 };
 

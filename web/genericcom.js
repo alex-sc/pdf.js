@@ -13,11 +13,15 @@
  * limitations under the License.
  */
 
-import { DefaultExternalServices, PDFViewerApplication } from "./app.js";
+import {
+  PDFPrintServiceFactory,
+  DefaultExternalServices,
+  PDFViewerApplication,
+} from "./app.js";
 import { AppOptions } from "./app_options.js";
+import { NullL10n } from "./l10n_utils";
 import { BasePreferences } from "./preferences.js";
 import { DownloadManager } from "./download_manager.js";
-import { GenericL10n } from "./genericl10n.js";
 import { GenericScripting } from "./generic_scripting.js";
 
 if (typeof PDFJSDev !== "undefined" && !PDFJSDev.test("GENERIC")) {
@@ -48,7 +52,7 @@ class GenericExternalServices extends DefaultExternalServices {
   }
 
   static async createL10n() {
-    return new GenericL10n(AppOptions.get("locale"));
+    return NullL10n;
   }
 
   static createScripting() {
