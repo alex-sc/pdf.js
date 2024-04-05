@@ -12,6 +12,9 @@ var pdfData = atob(
   'CjAwMDAwMDAwNzkgMDAwMDAgbiAKMDAwMDAwMDE3MyAwMDAwMCBuIAowMDAwMDAwMzAxIDAw' +
   'MDAwIG4gCjAwMDAwMDAzODAgMDAwMDAgbiAKdHJhaWxlcgo8PAogIC9TaXplIDYKICAvUm9v' +
   'dCAxIDAgUgo+PgpzdGFydHhyZWYKNDkyCiUlRU9G');
-console.log("Opening");
-PDFViewerApplication.open({data: pdfData});
-console.log("Opened");
+
+document.addEventListener('DOMContentLoaded', function() {
+  console.log("Opening");
+  PDFViewerApplication.open({data: pdfData});
+  console.log("Opened");
+});
