@@ -136,7 +136,7 @@ function safeSpawnSync(command, parameters, options) {
   const result = spawnSync(command, parameters, options);
   if (result.status !== 0) {
     console.log(
-        'Error: command "' +
+      'Error: command "' +
         command +
         '" with parameters "' +
         parameters +
@@ -218,11 +218,16 @@ function createWebpackConfig(
   const babelPresets = skipBabel
     ? undefined
     : [
-      [
-        "@babel/preset-env",
-        { corejs: "3.32.2", shippedProposals: true, useBuiltIns: "usage" },
-      ],
-    ];
+        [
+          "@babel/preset-env",
+          {
+            corejs: "3.34.0",
+            exclude: ["web.structured-clone"],
+            shippedProposals: true,
+            useBuiltIns: "usage",
+          },
+        ],
+      ];
   const babelPlugins = isModule
     ? []
     : ["@babel/plugin-transform-modules-commonjs"];
@@ -428,30 +433,6 @@ function tweakWebpackOutput(jsName) {
   });
 }
 
-function addGlobalExports(amdName, jsName) {
-  const replacer = [
-    `module\\.exports = factory\\(\\);`,
-    `define\\("${amdName}", \\[\\], factory\\);`,
-    `exports\\["${amdName}"\\] = factory\\(\\);`,
-    `root\\["${amdName}"\\] = factory\\(\\);`,
-  ];
-  const regex = new RegExp(`(${replacer.join("|")})`, "gm");
-
-  return replace(regex, match => {
-    switch (match) {
-      case `module.exports = factory();`:
-        return `module.exports = root.${jsName} = factory();`;
-      case `define("${amdName}", [], factory);`:
-        return `define("${amdName}", [], () => { return (root.${jsName} = factory()); });`;
-      case `exports["${amdName}"] = factory();`:
-        return `exports["${amdName}"] = root.${jsName} = factory();`;
-      case `root["${amdName}"] = factory();`:
-        return `root["${amdName}"] = root.${jsName} = factory();`;
-    }
-    return match;
-  });
-}
-
 function createMainBundle(defines) {
   const mainAMDName = "pdfjs-dist/build/pdf";
   const mainOutputName = "pdf.js";
@@ -469,14 +450,11 @@ function createMainBundle(defines) {
 }
 
 function createScriptingBundle(defines, extraOptions = undefined) {
-  const scriptingAMDName = "pdfjs-dist/build/pdf.scripting";
-  const scriptingOutputName = "pdf.scripting.mjs";
-
   const scriptingFileConfig = createWebpackConfig(
     defines,
     {
-      filename: scriptingOutputName,
-      library: scriptingAMDName,
+      filename: "pdf.scripting.mjs",
+      library: "pdfjs-dist/build/pdf.scripting",
       libraryTarget: "umd",
       umdNamedDefine: true,
     },
@@ -485,7 +463,7 @@ function createScriptingBundle(defines, extraOptions = undefined) {
   return gulp
     .src("./src/pdf.scripting.js")
     .pipe(webpack2Stream(scriptingFileConfig))
-    .pipe(addGlobalExports(scriptingAMDName, "pdfjsScripting"));
+    .pipe(tweakWebpackOutput());
 }
 
 function createSandboxExternal(defines) {
@@ -541,12 +519,9 @@ function createSandboxBundle(defines, extraOptions = undefined) {
 }
 
 function createWorkerBundle(defines) {
-  const workerAMDName = "pdfjs-dist/build/pdf.worker";
-  const workerOutputName = "pdf.worker.mjs";
-
   const workerFileConfig = createWebpackConfig(defines, {
-    filename: workerOutputName,
-    library: workerAMDName,
+    filename: "pdf.worker.mjs",
+    library: "pdfjs-dist/build/pdf.worker",
     libraryTarget: "umd",
     umdNamedDefine: true,
   });
@@ -931,7 +906,6 @@ gulp.task("locale", function () {
       viewerOutput[locale.toLowerCase()] = `${locale}/viewer.ftl`;
     }
   }
-
   const glob = locales.length === 1 ? locales[0] : `{${locales.join(",")}}`;
 
   return merge([
@@ -1040,6 +1014,7 @@ function buildGeneric(defines, dir) {
           autoprefixer(AUTOPREFIXER_CONFIG),
         ])
       )
+      // Embed SVG icons into viewer.css
       .pipe(replace(/url\(.*\)/g, function handleReplace(match) {
         const matchedFilename = match.substring(4, match.length - 1);
         if (matchedFilename.endsWith(".svg")) {
@@ -1650,7 +1625,7 @@ function buildLibHelper(bundleDefines, inputStream, outputDir) {
     .readFileSync("./src/license_header_libre.js")
     .toString();
   return inputStream
-    .pipe(transform("utf8", preprocessLib ))
+    .pipe(transform("utf8", preprocessLib))
     .pipe(gulp.dest(outputDir));
 }
 

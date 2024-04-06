@@ -13,11 +13,7 @@
  * limitations under the License.
  */
 
-import {
-  PDFPrintServiceFactory,
-  DefaultExternalServices,
-  PDFViewerApplication,
-} from "./app.js";
+import { DefaultExternalServices, PDFViewerApplication } from "./app.js";
 import { AppOptions } from "./app_options.js";
 import { NullL10n } from "./l10n_utils";
 import { BasePreferences } from "./preferences.js";

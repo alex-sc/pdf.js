@@ -35,8 +35,8 @@ class ConstL10n extends L10n {
     const text =
       typeof PDFJSDev === "undefined"
         ? await fetchData(
-          new URL(`./locale/${lang}/viewer.ftl`, window.location.href),
-          /* type = */ "text"
+            new URL(`./locale/${lang}/viewer.ftl`, window.location.href),
+            /* type = */ "text"
         )
         : PDFJSDev.eval("DEFAULT_FTL");
 
