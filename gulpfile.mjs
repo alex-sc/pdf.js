@@ -847,11 +847,19 @@ async function parseDefaultPreferences(dir) {
   "./" + DEFAULT_PREFERENCES_DIR + dir + "app_options.mjs"
     );
 
+  const browserPrefs = AppOptions.getAll(OptionKind.BROWSER);
+  if (Object.keys(browserPrefs).length === 0) {
+    throw new Error("No browser preferences found.");
+  }
   const prefs = AppOptions.getAll(OptionKind.PREFERENCE);
   if (Object.keys(prefs).length === 0) {
     throw new Error("No default preferences found.");
   }
 
+  fs.writeFileSync(
+    DEFAULT_PREFERENCES_DIR + dir + "browser_preferences.json",
+    JSON.stringify(browserPrefs)
+  );
   fs.writeFileSync(
     DEFAULT_PREFERENCES_DIR + dir + "default_preferences.json",
     JSON.stringify(prefs)
