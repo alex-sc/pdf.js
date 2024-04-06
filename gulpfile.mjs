@@ -1118,6 +1118,7 @@ function buildComponents(defines, dir) {
   const COMPONENTS_IMAGES = [
     "web/images/annotation-*.svg",
     "web/images/loading-icon.gif",
+    "web/images/altText_*.svg",
     "web/images/editor-toolbar-*.svg",
     "web/images/toolbarButton-menuArrow.svg",
   ];
@@ -1610,23 +1611,23 @@ function buildLibHelper(bundleDefines, inputStream, outputDir) {
       },
     };
   }
-  function preprocess(content) {
+  function preprocessLib(content) {
     const skipBabel = bundleDefines.SKIP_BABEL;
     content = preprocessPDFJSCode(ctx, content);
     content = babel.transform(content, {
       sourceType: "module",
-      presets: skipBabel ? undefined : ["@babel/preset-env"],
+      presets: skipBabel
+        ? undefined
+        : [["@babel/preset-env", { loose: false, modules: false }]],
       plugins: [
         "@babel/plugin-transform-modules-commonjs",
         babelPluginReplaceNonWebpackImports,
       ],
       targets: BABEL_TARGETS,
     }).code;
-    const removeCjsSrc =
-      /^(var\s+\w+\s*=\s*(_interopRequireDefault\()?require\(".*?)(?:\/src)(\/[^"]*"\)\)?;)$/gm;
     content = content.replaceAll(
-      removeCjsSrc,
-      (all, prefix, interop, suffix) => prefix + suffix
+      /(\sfrom\s".*?)(?:\/src)(\/[^"]*"?;)$/gm,
+      (all, prefix, suffix) => prefix + suffix
     );
     return licenseHeaderLibre + content;
   }
@@ -1635,19 +1636,21 @@ function buildLibHelper(bundleDefines, inputStream, outputDir) {
     saveComments: false,
     defines: bundleDefines,
     map: {
-      "pdfjs-lib": "../pdf",
-      "display-fetch_stream": "./fetch_stream",
-      "display-l10n_utils": "../web/l10n_utils",
-      "display-network": "./network",
-      "display-node_stream": "./node_stream",
-      "display-node_utils": "./node_utils",
+      "pdfjs-lib": "../pdf.js",
+      "display-fetch_stream": "./fetch_stream.js",
+      "display-network": "./network.js",
+      "display-node_stream": "./node_stream.js",
+      "display-node_utils": "./node_utils.js",
+      "fluent-bundle": "../../../node_modules/@fluent/bundle/index.js",
+      "fluent-dom": "../../../node_modules/@fluent/dom/index.js",
+      "web-l10n_utils": "../web/l10n_utils.js",
     },
   };
   const licenseHeaderLibre = fs
     .readFileSync("./src/license_header_libre.js")
     .toString();
   return inputStream
-    .pipe(transform("utf8", preprocess))
+    .pipe(transform("utf8", preprocessLib ))
     .pipe(gulp.dest(outputDir));
 }
 
@@ -1802,7 +1805,6 @@ gulp.task(
     return streamqueue(
       { objectMode: true },
       createTestSource("unit", { bot: true }),
-      createTestSource("font", { bot: true }),
       createTestSource("browser", { bot: true }),
       createTestSource("integration")
     );
@@ -1827,7 +1829,6 @@ gulp.task(
     return streamqueue(
       { objectMode: true },
       createTestSource("unit", { bot: true }),
-      createTestSource("font", { bot: true }),
       createTestSource("browser", { bot: true, xfaOnly: true }),
       createTestSource("integration")
     );
@@ -1906,12 +1907,11 @@ gulp.task(
       return merge([
         packageJson().pipe(gulp.dest(TYPESTEST_DIR)),
         gulp
-          .src([
-            GENERIC_DIR + "build/pdf.mjs",
-            GENERIC_DIR + "build/pdf.worker.mjs",
-            SRC_DIR + "pdf.worker.entry.js",
-          ])
-          .pipe(gulp.dest(TYPESTEST_DIR + "build/")),
+          .src("external/dist/**/*", {
+            base: "external/dist",
+            removeBOM: false,
+          })
+          .pipe(gulp.dest(TYPESTEST_DIR)),
         gulp
           .src(TYPES_DIR + "**/*", { base: TYPES_DIR })
           .pipe(gulp.dest(TYPESTEST_DIR + "types/")),
@@ -2090,6 +2090,13 @@ gulp.task(
 gulp.task(
   "server",
   gulp.parallel(
+    function watchLocale() {
+      gulp.watch(
+        "l10n/**/*.ftl",
+        { ignoreInitial: false },
+        gulp.series("locale")
+      );
+    },
     function watchDevSandbox() {
       gulp.watch(
         [
@@ -2280,14 +2287,12 @@ gulp.task(
           .src([
             GENERIC_DIR + "build/{pdf,pdf.worker,pdf.sandbox}.mjs",
             GENERIC_DIR + "build/{pdf,pdf.worker,pdf.sandbox}.mjs.map",
-            SRC_DIR + "pdf.worker.entry.js",
           ])
           .pipe(gulp.dest(DIST_DIR + "build/")),
         gulp
           .src([
             GENERIC_LEGACY_DIR + "build/{pdf,pdf.worker,pdf.sandbox}.mjs",
             GENERIC_LEGACY_DIR + "build/{pdf,pdf.worker,pdf.sandbox}.mjs.map",
-            SRC_DIR + "pdf.worker.entry.js",
           ])
           .pipe(gulp.dest(DIST_DIR + "legacy/build/")),
         gulp
@@ -2467,8 +2472,8 @@ gulp.task(
             .on("end", function () {
               console.log(
                 "Result diff can be found at " +
-                BUILD_DIR +
-                MOZCENTRAL_DIFF_FILE
+                  BUILD_DIR +
+                  MOZCENTRAL_DIFF_FILE
               );
               done();
             });
@@ -2491,12 +2496,3 @@ gulp.task("externaltest", function (done) {
   });
   done();
 });
-
-gulp.task(
-  "ci-test",
-  gulp.series(
-    gulp.parallel("lint", "externaltest", "unittestcli"),
-    "lint-chromium",
-    "typestest"
-  )
-);
