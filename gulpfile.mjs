@@ -25,6 +25,7 @@ import merge from "merge-stream";
 import { mkdirp } from "mkdirp";
 import path from "path";
 import postcss from "gulp-postcss";
+import postcssDarkThemeClass from "postcss-dark-theme-class";
 import postcssDirPseudoClass from "postcss-dir-pseudo-class";
 import postcssDiscardComments from "postcss-discard-comments";
 import postcssNesting from "postcss-nesting";
@@ -68,7 +69,7 @@ const TMP_DIR = BUILD_DIR + "tmp/";
 const TYPESTEST_DIR = BUILD_DIR + "typestest/";
 const COMMON_WEB_FILES = [
   "web/images/*.{png,svg,gif}",
-  "web/debugger.{css,js}",
+  "web/debugger.{css,mjs}",
 ];
 const MOZCENTRAL_DIFF_FILE = "mozcentral.diff";
 
@@ -135,12 +136,12 @@ function safeSpawnSync(command, parameters, options) {
   const result = spawnSync(command, parameters, options);
   if (result.status !== 0) {
     console.log(
-      'Error: command "' +
-      command +
-      '" with parameters "' +
-      parameters +
-      '" exited with code ' +
-      result.status
+        'Error: command "' +
+        command +
+        '" with parameters "' +
+        parameters +
+        '" exited with code ' +
+        result.status
     );
     process.exit(result.status);
   }
@@ -248,7 +249,6 @@ function createWebpackConfig(
   };
   const libraryAlias = {
     "display-fetch_stream": "src/display/stubs.js",
-    // "display-l10n_utils": "src/display/stubs.js",
     "display-network": "src/display/stubs.js",
     "display-node_stream": "src/display/stubs.js",
     "display-node_utils": "src/display/stubs.js",
@@ -282,7 +282,6 @@ function createWebpackConfig(
     // the tsconfig.json file for the type generation to work.
     // In the tsconfig.json files, the .js extension must be omitted.
     libraryAlias["display-fetch_stream"] = "src/display/fetch_stream.js";
-    //libraryAlias["display-l10n_utils"] = "web/l10n_utils.js";
     libraryAlias["display-network"] = "src/display/network.js";
     libraryAlias["display-node_stream"] = "src/display/node_stream.js";
     libraryAlias["display-node_utils"] = "src/display/node_utils.js";
@@ -385,7 +384,7 @@ function checkChromePreferencesFile(chromePrefsPath, webPrefs) {
       ret = false;
       console.log(
         `Warning: not the same values (for "${key}"): ` +
-        `${chromePrefs.properties[key].default} !== ${value}`
+          `${chromePrefs.properties[key].default} !== ${value}`
       );
     }
   }
@@ -397,8 +396,8 @@ function checkChromePreferencesFile(chromePrefsPath, webPrefs) {
       ret = false;
       console.log(
         `Warning: ${chromePrefsPath} contains an unrecognized pref: ${key}. ` +
-        `Remove it, or prepend "DEPRECATED. " and add migration logic to ` +
-        `extensions/chromium/options/migration.js and web/chromecom.js.`
+          `Remove it, or prepend "DEPRECATED. " and add migration logic to ` +
+          `extensions/chromium/options/migration.js and web/chromecom.js.`
       );
     }
   }
@@ -471,7 +470,7 @@ function createMainBundle(defines) {
 
 function createScriptingBundle(defines, extraOptions = undefined) {
   const scriptingAMDName = "pdfjs-dist/build/pdf.scripting";
-  const scriptingOutputName = "pdf.scripting.js";
+  const scriptingOutputName = "pdf.scripting.mjs";
 
   const scriptingFileConfig = createWebpackConfig(
     defines,
@@ -516,7 +515,7 @@ function createTemporaryScriptingBundle(defines, extraOptions = undefined) {
 }
 
 function createSandboxBundle(defines, extraOptions = undefined) {
-  const scriptingPath = TMP_DIR + "pdf.scripting.js";
+  const scriptingPath = TMP_DIR + "pdf.scripting.mjs";
   // Insert the source as a string to be `eval`-ed in the sandbox.
   const sandboxDefines = {
     ...defines,
@@ -574,8 +573,6 @@ function createWebBundle(defines, options) {
 }
 
 function createGVWebBundle(defines, options) {
-  defines = { ...defines, GECKOVIEW: true };
-
   const viewerFileConfig = createWebpackConfig(
     defines,
     {
@@ -717,6 +714,9 @@ function createTestSource(testsName, { bot = false, xfaOnly = false } = {}) {
     if (process.argv.includes("--noChrome") || forceNoChrome) {
       args.push("--noChrome");
     }
+    if (process.argv.includes("--headless")) {
+      args.push("--headless");
+    }
 
     const testProcess = startNode(args, { cwd: TEST_DIR, stdio: "inherit" });
     testProcess.on("close", function (code) {
@@ -744,6 +744,9 @@ function makeRef(done, bot) {
   }
   if (process.argv.includes("--noChrome") || forceNoChrome) {
     args.push("--noChrome");
+  }
+  if (process.argv.includes("--headless")) {
+    args.push("--headless");
   }
 
   const testProcess = startNode(args, { cwd: TEST_DIR, stdio: "inherit" });
@@ -844,8 +847,8 @@ async function parseDefaultPreferences(dir) {
 
   // eslint-disable-next-line no-unsanitized/method
   const { AppOptions, OptionKind } = await import(
-  "./" + DEFAULT_PREFERENCES_DIR + dir + "app_options.mjs"
-    );
+    "./" + DEFAULT_PREFERENCES_DIR + dir + "app_options.mjs"
+  );
 
   const browserPrefs = AppOptions.getAll(OptionKind.BROWSER);
   if (Object.keys(browserPrefs).length === 0) {
@@ -906,7 +909,7 @@ gulp.task("locale", function () {
 
   const subfolders = fs.readdirSync(L10N_DIR);
   subfolders.sort();
-  let viewerOutput = Object.create(null);
+  const viewerOutput = Object.create(null);
   const locales = [];
   for (const locale of subfolders) {
     const dirPath = L10N_DIR + locale;
@@ -923,7 +926,9 @@ gulp.task("locale", function () {
     locales.push(locale);
 
     if (checkFile(dirPath + "/viewer.ftl")) {
-      viewerOutput[locale] = `${locale}/viewer.ftl`;
+      // The L10n-implementations, in the viewer, use lowercase language-codes
+      // internally.
+      viewerOutput[locale.toLowerCase()] = `${locale}/viewer.ftl`;
     }
   }
 
@@ -964,7 +969,7 @@ gulp.task("cmaps", async function () {
 
   const { compressCmaps } = await import(
     "./external/cmapscompress/compress.mjs"
-    );
+  );
   compressCmaps(CMAP_INPUT, VIEWER_CMAP_OUTPUT, true);
 });
 
@@ -1031,6 +1036,7 @@ function buildGeneric(defines, dir) {
           postcssDirPseudoClass(),
           discardCommentsCSS(),
           postcssNesting(),
+          postcssDarkThemeClass(),
           autoprefixer(AUTOPREFIXER_CONFIG),
         ])
       )
@@ -1038,8 +1044,6 @@ function buildGeneric(defines, dir) {
         const matchedFilename = match.substring(4, match.length - 1);
         if (matchedFilename.endsWith(".svg")) {
           let data = fs.readFileSync("web/" + matchedFilename);
-//          data = data.toString('utf8');
-//          return 'url(data:image/svg+xml;charset=UTF-8,' + data + ')';
           data = data.toString('base64');
           return 'url(data:image/svg+xml;base64,' + data + ')';
         } else {
@@ -1114,7 +1118,8 @@ function buildComponents(defines, dir) {
   const COMPONENTS_IMAGES = [
     "web/images/annotation-*.svg",
     "web/images/loading-icon.gif",
-    "web/images/altText_*.svg",
+    "web/images/editor-toolbar-*.svg",
+    "web/images/toolbarButton-menuArrow.svg",
   ];
 
   return merge([
@@ -1411,7 +1416,7 @@ gulp.task(
         createWebBundle(defines, { defaultPreferencesDir: "mozcentral/" }).pipe(
           gulp.dest(MOZCENTRAL_CONTENT_DIR + "web")
         ),
-        createGVWebBundle(defines, {
+        createGVWebBundle(gvDefines, {
           defaultPreferencesDir: "mozcentral/",
         }).pipe(gulp.dest(MOZCENTRAL_CONTENT_DIR + "web")),
         gulp
@@ -1533,6 +1538,7 @@ gulp.task(
               postcssDirPseudoClass(),
               discardCommentsCSS(),
               postcssNesting(),
+              postcssDarkThemeClass(),
               autoprefixer(AUTOPREFIXER_CONFIG),
             ])
           )
@@ -1666,7 +1672,6 @@ function buildLib(defines, dir) {
     gulp.src(
       [
         "src/{core,display,shared}/**/*.js",
-        "!src/shared/{cffStandardStrings,fonts_utils}.js",
         "src/{pdf,pdf.image_decoders,pdf.worker}.js",
       ],
       { base: "src/" }
