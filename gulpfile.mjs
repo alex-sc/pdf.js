@@ -1034,6 +1034,18 @@ function buildGeneric(defines, dir) {
           autoprefixer(AUTOPREFIXER_CONFIG),
         ])
       )
+      .pipe(replace(/url\(.*\)/g, function handleReplace(match) {
+        const matchedFilename = match.substring(4, match.length - 1);
+        if (matchedFilename.endsWith(".svg")) {
+          let data = fs.readFileSync("web/" + matchedFilename);
+//          data = data.toString('utf8');
+//          return 'url(data:image/svg+xml;charset=UTF-8,' + data + ')';
+          data = data.toString('base64');
+          return 'url(data:image/svg+xml;base64,' + data + ')';
+        } else {
+          return match;
+        }
+      }))
       .pipe(gulp.dest(dir + "web")),
 
     gulp
