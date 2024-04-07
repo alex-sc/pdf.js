@@ -994,7 +994,6 @@ function buildGeneric(defines, dir) {
     }).pipe(gulp.dest(dir + "web")),
     gulp.src(COMMON_WEB_FILES, { base: "web/" }).pipe(gulp.dest(dir + "web")),
     gulp.src("LICENSE").pipe(gulp.dest(dir)),
-    gulp.src("viewer-setup.js").pipe(gulp.dest(dir + "web")),
     gulp
       .src(["web/locale/*/viewer.ftl", "web/locale/locale.json"], {
         base: "web/",
