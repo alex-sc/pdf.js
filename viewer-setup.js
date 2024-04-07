@@ -14,7 +14,5 @@ var pdfData = atob(
   'dCAxIDAgUgo+PgpzdGFydHhyZWYKNDkyCiUlRU9G');
 
 document.addEventListener('DOMContentLoaded', function() {
-  console.log("Opening");
   PDFViewerApplication.open({data: pdfData});
-  console.log("Opened");
 });

@@ -31,10 +31,7 @@ Tested on files from `test/pdfs`
 
 ### Known Issues
 - Locales not supported. Supported could be added, but requires additional work
-- Is pdf.sandbox.mjs actually required? It's loading is triggered by some documents like `issue6127.pdf`
-```
-setDocument: "error loading dynamically imported module: file:///Users/alex/work/javascript/pdf.js/build/generic/build/pdf.sandbox.mjs".
-```
+- Is pdf.sandbox.mjs actually required to include in the build?
 - Are standard_fonts/* and cmaps/* needed?
 - Fonts - yes, open `xfa_filled_imm1344e.pdf`
 ```

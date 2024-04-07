@@ -505,11 +505,10 @@ function createSandboxBundle(defines, extraOptions = undefined) {
     sandboxDefines,
     {
       filename: "pdf.sandbox.mjs",
-      library: {
-        type: "module",
-      },
+      library: "pdfjs-dist/build/pdf.sandbox",
+      libraryTarget: "umd",
+      umdNamedDefine: true,
     },
-    extraOptions
   );
 
   return gulp
@@ -1053,15 +1052,12 @@ function buildGenericLocal(defines, dir) {
   return merge([
     createMainBundle(defines).pipe(gulp.dest(dir)),
     createWorkerBundle(defines).pipe(gulp.dest(dir)),
+    createSandboxBundle(defines).pipe(gulp.dest(dir)),
     createWebBundle(defines, {
-      defaultPreferencesDir: defines.SKIP_BABEL
-        ? "generic/"
-        : "generic-legacy/",
+      defaultPreferencesDir: "generic/"
     }).pipe(gulp.dest(dir)),
     gulp.src("LICENSE").pipe(gulp.dest(dir)),
     gulp.src("viewer-setup.js").pipe(gulp.dest(dir)),
-//    createCMapBundle().pipe(gulp.dest(dir + "web/cmaps")),
-//    createStandardFontBundle().pipe(gulp.dest(dir + "web/standard_fonts")),
 
     preprocessHTML("web/viewer-local.html", defines).pipe(gulp.dest(dir)),
     preprocessCSS("web/viewer.css", defines)
