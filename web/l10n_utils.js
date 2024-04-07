@@ -37,7 +37,7 @@ class ConstL10n extends L10n {
         ? await fetchData(
             new URL(`./locale/${lang}/viewer.ftl`, window.location.href),
             /* type = */ "text"
-        )
+          )
         : PDFJSDev.eval("DEFAULT_FTL");
 
     const resource = new FluentResource(text);

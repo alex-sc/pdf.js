@@ -6,7 +6,8 @@ PDF.js is community-driven and supported by Mozilla. Our goal is to
 create a general-purpose, web standards-based platform for parsing and
 rendering PDFs.
 
-## Build
+## Local Offline Version
+### Build
 ```
 git clone https://github.com/alex-sc/pdf.js.git
 cd pdf.js/
@@ -14,7 +15,27 @@ git checkout v4.0.379-no-modules
 npm install
 npm install -g gulp-cli (if needed)
 gulp generic
-Open ./build/generic/web/viewer.html in browser
+```
+- Adjust base64-encoded PDF in `viewer-setup.js`
+- Open `./build/generic/web/viewer.html` in browser
+
+### Test
+Tested on files from `test/pdfs`
+
+### Known Issues
+- Locales not supported. Supported could be added, but requires additional work
+- Is pdf.sandbox.mjs actually required? It's loading is triggered by some documents like `issue6127.pdf`
+```
+setDocument: "error loading dynamically imported module: file:///Users/alex/work/javascript/pdf.js/build/generic/build/pdf.sandbox.mjs".
+```
+- Are standard_fonts/* and cmaps/* needed?
+- Fonts - yes, open `xfa_filled_imm1344e.pdf`
+```
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at file:///Users/alex/work/javascript/pdf.js/build/generic/web/standard_fonts/LiberationSans-BoldItalic.ttf. (Reason: CORS request not http).
+```
+- Cmaps - yes, open `issue6286.pdf`
+```
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at file:///Users/alex/work/javascript/pdf.js/build/generic/web/cmaps/Adobe-Japan1-UCS2.bcmap. (Reason: CORS request not http).
 ```
 
 ## Contributing
