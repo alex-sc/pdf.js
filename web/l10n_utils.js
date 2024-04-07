@@ -54,33 +54,47 @@ class ConstL10n extends L10n {
   }
 }
 
+const localGeneric =
+  typeof PDFJSDev !== "undefined" && PDFJSDev.test("GENERIC_LOCAL");
+
 /**
  * No-op implementation of the localization service.
  * @implements {IL10n}
  */
 const NullL10n = {
   getLanguage() {
-    return "en";
+    return localGeneric ? "en" : ConstL10n.instance.getLanguage();
   },
 
   getDirection() {
-    return "ltr";
+    return localGeneric ? "ltr" : ConstL10n.instance.getDirection();
   },
 
   async get(ids, args = null, fallback) {
-    return fallback;
+    return localGeneric
+      ? fallback
+      : ConstL10n.instance.get(ids, args, fallback);
   },
 
   async translate(element) {
-    // do nothing
+    if (localGeneric) {
+      return null;
+    }
+    return ConstL10n.instance.translate(element);
   },
 
   pause() {
-    // do nothing
+    if (localGeneric) {
+      return null;
+    }
+    return ConstL10n.instance.pause();
   },
 
   resume() {
-    // do nothing
+    if (localGeneric) {
+      return null;
+    }
+    return ConstL10n.instance.resume();
   },
 };
 

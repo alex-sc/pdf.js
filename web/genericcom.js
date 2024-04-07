@@ -15,16 +15,20 @@
 
 import { DefaultExternalServices, PDFViewerApplication } from "./app.js";
 import { AppOptions } from "./app_options.js";
-import { NullL10n } from "./l10n_utils";
 import { BasePreferences } from "./preferences.js";
 import { DownloadManager } from "./download_manager.js";
+import { GenericL10n } from "./genericl10n.js";
 import { GenericScripting } from "./generic_scripting.js";
+import { NullL10n } from "./l10n_utils.js";
 
 if (typeof PDFJSDev !== "undefined" && !PDFJSDev.test("GENERIC")) {
   throw new Error(
     'Module "pdfjs-web/genericcom" shall not be used outside GENERIC build.'
   );
 }
+
+const localGeneric =
+  typeof PDFJSDev !== "undefined" && PDFJSDev.test("GENERIC_LOCAL");
 
 const GenericCom = {};
 
@@ -48,7 +52,10 @@ class GenericExternalServices extends DefaultExternalServices {
   }
 
   static async createL10n() {
-    return NullL10n;
+    if (localGeneric) {
+      return NullL10n;
+    }
+    return new GenericL10n(AppOptions.get("locale"));
   }
 
   static createScripting() {

@@ -101,6 +101,7 @@ const DEFINES = Object.freeze({
   TESTING: undefined,
   // The main build targets:
   GENERIC: false,
+  GENERIC_LOCAL: false,
   MOZCENTRAL: false,
   GECKOVIEW: false,
   CHROME: false,
@@ -435,7 +436,6 @@ function tweakWebpackOutput(jsName) {
 
 function createMainBundle(defines) {
   const mainAMDName = "pdfjs-dist/build/pdf";
-  const mainOutputName = "pdf.js";
 
   const mainFileConfig = createWebpackConfig(defines, {
     filename: "pdf.mjs",
@@ -1098,7 +1098,7 @@ gulp.task(
     createBuildNumber,
     "locale",
     function scriptingGeneric() {
-      const defines = { ...DEFINES, GENERIC: true };
+      const defines = { ...DEFINES, GENERIC: true, GENERIC_LOCAL: true };
       return merge([
         buildDefaultPreferences(defines, "generic/"),
         createTemporaryScriptingBundle(defines),
@@ -1110,7 +1110,7 @@ gulp.task(
     function createGeneric() {
       console.log();
       console.log("### Creating generic local viewer");
-      const defines = { ...DEFINES, GENERIC: true };
+      const defines = { ...DEFINES, GENERIC: true, GENERIC_LOCAL: true };
 
       return buildGenericLocal(defines, LOCAL_DIR);
     }

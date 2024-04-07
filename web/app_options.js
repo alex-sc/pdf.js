@@ -342,7 +342,18 @@ const defaultOptions = {
     kind: OptionKind.WORKER,
   },
 };
-if (typeof PDFJSDev === "undefined" || !PDFJSDev.test("MOZCENTRAL")) {
+if (
+  typeof PDFJSDev === "undefined" ||
+  (!PDFJSDev.test("MOZCENTRAL") && !PDFJSDev.test("GENERIC_LOCAL"))
+) {
+  defaultOptions.defaultUrl = {
+    /** @type {string} */
+    value:
+      typeof PDFJSDev !== "undefined" && PDFJSDev.test("CHROME")
+        ? ""
+        : "compressed.tracemonkey-pldi-09.pdf",
+    kind: OptionKind.VIEWER,
+  };
   defaultOptions.sandboxBundleSrc = {
     /** @type {string} */
     value:
