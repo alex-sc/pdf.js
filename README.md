@@ -7,6 +7,12 @@ create a general-purpose, web standards-based platform for parsing and
 rendering PDFs.
 
 ## Local Offline Version
+
+This commit has converted PDF.js .js files into modules and made 
+it impossible to use PDF.js locally from a folder. This fork attempts to produce a non-modular version of PDF.js
+
+https://github.com/mozilla/pdf.js/commit/927e50f5d48a67e76f2a51c112ea5a98867822fe
+
 ### Build
 ```
 git clone https://github.com/alex-sc/pdf.js.git
@@ -14,10 +20,11 @@ cd pdf.js/
 git checkout v4.0.379-no-modules
 npm install
 npm install -g gulp-cli (if needed)
-gulp generic
+gulp local
 ```
-- Adjust base64-encoded PDF in `viewer-setup.js`
-- Open `./build/generic/web/viewer.html` in browser
+- Adjust base64-encoded PDF in `./build/local/viewer-setup.js`
+- Open `./build/local/viewer-local.html` in browser
+- Use `./build/local/` folder for distribution purposes
 
 ### Test
 Tested on files from `test/pdfs`

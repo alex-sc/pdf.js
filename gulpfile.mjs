@@ -53,6 +53,7 @@ const BASELINE_DIR = BUILD_DIR + "baseline/";
 const MOZCENTRAL_BASELINE_DIR = BUILD_DIR + "mozcentral.baseline/";
 const GENERIC_DIR = BUILD_DIR + "generic/";
 const GENERIC_LEGACY_DIR = BUILD_DIR + "generic-legacy/";
+const LOCAL_DIR = BUILD_DIR + "local/";
 const COMPONENTS_DIR = BUILD_DIR + "components/";
 const COMPONENTS_LEGACY_DIR = BUILD_DIR + "components-legacy/";
 const IMAGE_DECODERS_DIR = BUILD_DIR + "image_decoders/";
@@ -1013,17 +1014,6 @@ function buildGeneric(defines, dir) {
           autoprefixer(AUTOPREFIXER_CONFIG),
         ])
       )
-      // Embed SVG icons into viewer.css
-      .pipe(replace(/url\(.*\)/g, function handleReplace(match) {
-        const matchedFilename = match.substring(4, match.length - 1);
-        if (matchedFilename.endsWith(".svg")) {
-          let data = fs.readFileSync("web/" + matchedFilename);
-          data = data.toString('base64');
-          return 'url(data:image/svg+xml;base64,' + data + ')';
-        } else {
-          return match;
-        }
-      }))
       .pipe(gulp.dest(dir + "web")),
 
     gulp
@@ -1055,6 +1045,75 @@ gulp.task(
       const defines = { ...DEFINES, GENERIC: true };
 
       return buildGeneric(defines, GENERIC_DIR);
+    }
+  )
+);
+function buildGenericLocal(defines, dir) {
+  rimraf.sync(dir);
+
+  return merge([
+    createMainBundle(defines).pipe(gulp.dest(dir)),
+    createWorkerBundle(defines).pipe(gulp.dest(dir)),
+    createWebBundle(defines, {
+      defaultPreferencesDir: defines.SKIP_BABEL
+        ? "generic/"
+        : "generic-legacy/",
+    }).pipe(gulp.dest(dir)),
+    gulp.src("LICENSE").pipe(gulp.dest(dir)),
+    gulp.src("viewer-setup.js").pipe(gulp.dest(dir)),
+//    createCMapBundle().pipe(gulp.dest(dir + "web/cmaps")),
+//    createStandardFontBundle().pipe(gulp.dest(dir + "web/standard_fonts")),
+
+    preprocessHTML("web/viewer-local.html", defines).pipe(gulp.dest(dir)),
+    preprocessCSS("web/viewer.css", defines)
+      .pipe(
+        postcss([
+          postcssDirPseudoClass(),
+          discardCommentsCSS(),
+          postcssNesting(),
+          postcssDarkThemeClass(),
+          autoprefixer(AUTOPREFIXER_CONFIG),
+        ])
+      )
+      // Embed SVG icons into viewer.css
+      .pipe(replace(/url\(.*\)/g, function handleReplace(match) {
+        const matchedFilename = match.substring(4, match.length - 1);
+        if (matchedFilename.endsWith(".svg")) {
+          let data = fs.readFileSync("web/" + matchedFilename);
+          data = data.toString('base64');
+          return 'url(data:image/svg+xml;base64,' + data + ')';
+        } else {
+          return match;
+        }
+      }))
+      .pipe(gulp.dest(dir)),
+  ]);
+}
+
+// Builds the generic production viewer that is only compatible with up-to-date
+// HTML5 browsers, which implement modern ECMAScript features
+// and works from a local folder
+gulp.task(
+  "local",
+  gulp.series(
+    createBuildNumber,
+    "locale",
+    function scriptingGeneric() {
+      const defines = { ...DEFINES, GENERIC: true };
+      return merge([
+        buildDefaultPreferences(defines, "generic/"),
+        createTemporaryScriptingBundle(defines),
+      ]);
+    },
+    async function prefsGeneric() {
+      await parseDefaultPreferences("generic/");
+    },
+    function createGeneric() {
+      console.log();
+      console.log("### Creating generic local viewer");
+      const defines = { ...DEFINES, GENERIC: true };
+
+      return buildGenericLocal(defines, LOCAL_DIR);
     }
   )
 );
