@@ -365,11 +365,31 @@ class PartialEvaluator {
     return false;
   }
 
+  base64ToArrayBuffer(base64) {
+    var binaryString = atob(base64);
+    var bytes = new Uint8Array(binaryString.length);
+    for (var i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
   async fetchBuiltInCMap(name) {
     const cachedData = this.builtInCMapCache.get(name);
     if (cachedData) {
       return cachedData;
     }
+
+    // eslint-disable-next-line no-undef
+    if (typeof STATIC_CMAPS !== "undefined") {
+      // eslint-disable-next-line no-undef
+      const cmapBuffer = this.base64ToArrayBuffer(STATIC_CMAPS[name + ".bcmap"]);
+      return {
+        cMapData: cmapBuffer,
+        compressionType: CMapCompressionType.BINARY,
+      };
+    }
+
     let data;
 
     if (this.options.cMapUrl !== null) {

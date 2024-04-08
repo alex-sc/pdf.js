@@ -37,10 +37,7 @@ Tested on files from `test/pdfs`
 ```
 Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at file:///Users/alex/work/javascript/pdf.js/build/generic/web/standard_fonts/LiberationSans-BoldItalic.ttf. (Reason: CORS request not http).
 ```
-- Cmaps - yes, open `issue6286.pdf`
-```
-Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at file:///Users/alex/work/javascript/pdf.js/build/generic/web/cmaps/Adobe-Japan1-UCS2.bcmap. (Reason: CORS request not http).
-```
+- Cmaps - yes, open `issue6286.pdf`. Added into optional `cmaps.json`
 
 ## Contributing
 

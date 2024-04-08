@@ -41,6 +41,9 @@ import Vinyl from "vinyl";
 import webpack2 from "webpack";
 import webpackStream from "webpack-stream";
 import zip from "gulp-zip";
+import map from "map-stream";
+import each from "gulp-each";
+import concat from "gulp-concat";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -1058,6 +1061,25 @@ function buildGenericLocal(defines, dir) {
     }).pipe(gulp.dest(dir)),
     gulp.src("LICENSE").pipe(gulp.dest(dir)),
     gulp.src("viewer-setup.js").pipe(gulp.dest(dir)),
+
+    // Package cmaps into a single JS file
+    createCMapBundle()
+      // Each cmap into a JSON line
+      .pipe(each((content, file, callback) => {
+        var filename = path.parse(file.path).base;
+        const output = "\"" + filename + "\" : \"" + new Buffer(content).toString('base64') + "\",";
+        callback(null, output)
+      }))
+      // Concat 'JSON' lines
+      .pipe(concat("cmaps.js"))
+      // Add JS variable
+      .pipe(map(function(file, cb) {
+        let fileContents = file.contents.toString();
+        let newFileContents = "const STATIC_CMAPS = {" + fileContents + "};";
+        file.contents = new Buffer(newFileContents);
+        cb(null, file);
+      }))
+      .pipe(gulp.dest(dir)),
 
     preprocessHTML("web/viewer-local.html", defines).pipe(gulp.dest(dir)),
     preprocessCSS("web/viewer.css", defines)
