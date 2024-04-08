@@ -14,5 +14,9 @@ var pdfData = atob(
   'dCAxIDAgUgo+PgpzdGFydHhyZWYKNDkyCiUlRU9G');
 
 document.addEventListener('DOMContentLoaded', function() {
+  // Example of setting preferences
+  //PDFViewerApplicationOptions.set("maxImageSize", 200);
+  //console.log(PDFViewerApplicationOptions.getAll());
+
   PDFViewerApplication.open({data: pdfData});
 });
